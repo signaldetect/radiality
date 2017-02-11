@@ -49,16 +49,25 @@ class Loggable:
         """
         Logs the info message
         """
-        self._logger.applog.info(msg, *args, **kwargs)
+        if self._logger:
+            self._logger.applog.info(msg, *args, **kwargs)
+        else:
+            print('INFO: ' + msg)
 
     def warn(self, msg, *args, **kwargs):
         """
         Logs the warning message
         """
-        self._logger.applog.warning(msg, *args, **kwargs)
+        if self._logger:
+            self._logger.applog.warning(msg, *args, **kwargs)
+        else:
+            print('WARN: ' + msg)
 
     def fail(self, msg, *args, **kwargs):
         """
         Logs the error message
         """
-        self._logger.applog.error(msg, *args, **kwargs)
+        if self._logger:
+            self._logger.applog.error(msg, *args, **kwargs)
+        else:
+            print('FAIL: ' + msg)

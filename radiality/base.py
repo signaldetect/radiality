@@ -33,9 +33,11 @@ class Subsystem(watch.Loggable, circuit.Connectable):
         """
         Initialization
         """
-        self._logger = watch.Logger(
-            config_path=logging_config, name=self.logger_name
-        )
+        if logging_config:
+            self._logger = watch.Logger(
+                config_path=logging_config, name=self.logger_name
+            )
+
         self._connector = circuit.Connector(
             logger=self._logger,
             config_path=connection_config,
