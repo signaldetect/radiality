@@ -79,29 +79,27 @@ class Connector(watch.Loggable):
     def wanted(self):
         return self._wanted
 
-    @asyncio.coroutine
-    def connect(self, sid, freq):
+    async def connect(self, sid, freq):
         channel = None
 
         while True:
             try:
-                channel = yield from websockets.connect(
+                channel = await websockets.connect(
                     freq,
                     timeout=utils.MSG_TIMEOUT,
                     max_size=utils.MSG_MAX_SIZE
                 )
             except Exception as exc:
                 self.warn('Connection failed: %s. Waiting...', str(exc))
-                yield from asyncio.sleep(self.WAIT_TIME)
+                await asyncio.sleep(self.WAIT_TIME)
             else:
                 break
 
         return channel
 
-    @asyncio.coroutine
-    def disconnect(self, sid, channel):
+    async def disconnect(self, sid, channel):
         try:
-            yield from channel.close()
+            await channel.close()
         except ConnectionClosed:
             self.warn('Connection to `%s` already closed', sid)
         finally:
@@ -134,11 +132,9 @@ class Connectable:
     def wanted(self):
         return self._connector.wanted
 
-    @asyncio.coroutine
-    def connect(self, sid, freq):
-        channel = yield from self._connector.connect(sid, freq)
+    async def connect(self, sid, freq):
+        channel = await self._connector.connect(sid, freq)
         return channel
 
-    @asyncio.coroutine
-    def disconnect(self, sid, channel):
-        yield from self._connector.disconnect(sid, channel)
+    async def disconnect(self, sid, channel):
+        await self._connector.disconnect(sid, channel)

@@ -1,4 +1,0 @@
-# Configuration of the subsystem's connection
-sid: storage
-host: 127.0.0.1
-port: 50100

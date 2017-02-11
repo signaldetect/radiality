@@ -7,7 +7,6 @@ Apache 2.0 licensed.
 
 from functools import wraps
 import json
-import asyncio
 
 from websockets.exceptions import ConnectionClosed
 
@@ -23,12 +22,10 @@ def effect(method):
     n = method.__code__.co_argcount
     effect_spec_keys = set(method.__code__.co_varnames[1:n])
 
-    method = asyncio.coroutine(method)
-
     @wraps(method)
-    def _wrapper(self, event_spec):
+    async def _wrapper(self, event_spec):
         if set(event_spec.keys()) == effect_spec_keys:
-            yield from method(self, **event_spec)
+            await method(self, **event_spec)
         else:
             self._specs_keys_conflict(
                 event=method.__name__,
@@ -38,7 +35,7 @@ def effect(method):
 
     _wrapper._is_effect = True
 
-    return asyncio.coroutine(_wrapper)
+    return _wrapper
 
 
 class Effector(watch.Loggable, circuit.Connectable):
@@ -76,18 +73,16 @@ class Effector(watch.Loggable, circuit.Connectable):
         return self._eventer
 
     # overridden from `circuit.Connectable`
-    @asyncio.coroutine
-    def connect(self, sid, freq):
-        channel = yield from super().connect(sid, freq)
+    async def connect(self, sid, freq):
+        channel = await super().connect(sid, freq)
         if channel:
-            yield from self._connecting(channel)
+            await self._connecting(channel)
 
         return channel
 
-    @asyncio.coroutine
-    def activate(self):
+    async def activate(self):
         try:
-            spec = yield from self._channel.recv()
+            spec = await self._channel.recv()
             spec = json.loads(spec)
         except ConnectionClosed:
             self.warn('Connection closed')
@@ -98,17 +93,16 @@ class Effector(watch.Loggable, circuit.Connectable):
                 'could not decode the event specification: %s', str(spec)
             )
         else:
-            yield from self._parse(spec)
+            await self._parse(spec)
 
         return True
 
-    @asyncio.coroutine
-    def _connecting(self, channel):
+    async def _connecting(self, channel):
         spec = {'*signal': 'connecting', 'sid': self.sid, 'freq': self.freq}
 
         try:
             spec = json.dumps(spec)
-            yield from channel.send(spec)
+            await channel.send(spec)
         except ValueError:
             self.fail(
                 'Invalid output -- '
@@ -117,12 +111,11 @@ class Effector(watch.Loggable, circuit.Connectable):
         except ConnectionClosed:
             self.fail('Connection closed')
 
-    @asyncio.coroutine
-    def _parse(self, spec):
+    async def _parse(self, spec):
         event = spec.pop('*event', None)
 
         if event in self._effects:
-            yield from self._effects[event](self, spec)
+            await self._effects[event](self, spec)
         elif event is None:
             self.fail(
                 'Invalid input -- '

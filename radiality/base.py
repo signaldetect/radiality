@@ -75,42 +75,38 @@ class Subsystem(watch.Loggable, circuit.Connectable):
             event_loop.close()
 
     # overridden from `circuit.Connectable`
-    @asyncio.coroutine
-    def connect(self, sid, freq):
+    async def connect(self, sid, freq):
         effector_inst = Effector(
             logger=self._logger,
             connector=self._connector,
             eventer=self._eventer_inst,
             channel=None
         )
-        channel = yield from effector_inst.connect(sid, freq)
+        channel = await effector_inst.connect(sid, freq)
 
         return channel
 
-    @asyncio.coroutine
-    def launched(self):
+    async def launched(self):
         self.log('Serving on `{0}`'.format(self.freq))
 
-    @asyncio.coroutine
-    def _receiver(self, channel, path):
+    async def _receiver(self, channel, path):
         try:
-            data = yield from channel.recv()
+            data = await channel.recv()
             data = json.loads(data)
         except ConnectionClosed:
             self.fail('Connection closed')
         except ValueError:
             self.fail('Invalid input -- could not decode data: %s', str(data))
         else:
-            yield from self._parse(data, channel)
+            await self._parse(data, channel)
 
-    @asyncio.coroutine
-    def _parse(self, data, channel):
+    async def _parse(self, data, channel):
         signal = data.get('*signal', None)
         sid = data.get('sid', None)
 
         if signal == 'connecting':
             freq = data.get('freq', None)
-            channel = yield from self._eventer_inst.connect(sid, freq)
+            channel = await self._eventer_inst.connect(sid, freq)
         elif signal == 'connected':
             self.log('Connected to `%s`', sid)
         elif signal == 'biconnected':
@@ -122,10 +118,9 @@ class Subsystem(watch.Loggable, circuit.Connectable):
             self.warn('Unknown signal -- %s', str(signal))
 
         if sid in self.wanted:
-            yield from self._receiving(sid, channel)
+            await self._receiving(sid, channel)
 
-    @asyncio.coroutine
-    def _receiving(self, sid, channel):
+    async def _receiving(self, sid, channel):
         self.log('Receiving the `%s` subsystem', sid)
 
         effector_inst = self.effectors.get(sid, self.effector)(
@@ -138,6 +133,6 @@ class Subsystem(watch.Loggable, circuit.Connectable):
         receiving = True
         while receiving:
             try:
-                receiving = yield from effector_inst.activate()
+                receiving = await effector_inst.activate()
             except Exception as exc:
                 self.log(exc, exc_info=True)
