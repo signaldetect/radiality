@@ -11,16 +11,6 @@ architecture.
 
 Install via `$ pip install radiality`.
 
-## Example
-
-Take a look at the sample application in the [example](./example) directory.
-Run the sample application via:
-
-```
-$ cd example/
-$ sudo docker-compose up -d
-```
-
 ## License
 
 Apache 2.0
