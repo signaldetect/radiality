@@ -27,16 +27,11 @@ class Connector(watch.Loggable):
     _freq = None  # type: str
     _wanted = None  # type: list of str
 
-    def __init__(self, logger, config_path, wanted):
+    def __init__(self, logger, config, wanted):
         """
         Setups the connection configuration
         """
         self._logger = logger
-
-        if os.path.exists(config_path):
-            config = utils.load_config(config_path)
-        else:
-            raise Exception()
 
         self._sid = config.get('sid', None)
         if self._sid is None:

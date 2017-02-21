@@ -29,18 +29,18 @@ class Subsystem(watch.Loggable, circuit.Connectable):
 
     _eventer_inst = None  # type: Eventer
 
-    def __init__(self, logging_config, connection_config):
+    def __init__(self, connection_config, logging_config_path=None):
         """
         Initialization
         """
-        if logging_config:
+        if logging_config_path:
             self._logger = watch.Logger(
-                config_path=logging_config, name=self.logger_name
+                config_path=logging_config_path, name=self.logger_name
             )
 
         self._connector = circuit.Connector(
             logger=self._logger,
-            config_path=connection_config,
+            config=connection_config,
             wanted=self.effectors.keys()
         )
 
