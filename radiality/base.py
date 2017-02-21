@@ -63,7 +63,7 @@ class Subsystem(watch.Loggable, circuit.Connectable):
         try:
             serving = websockets.serve(
                 ws_handler=self._receiver,
-                host=self.host,
+                host='127.0.0.1',
                 port=self.port,
                 timeout=utils.MSG_TIMEOUT,
                 max_size=utils.MSG_MAX_SIZE

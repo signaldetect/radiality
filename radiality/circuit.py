@@ -42,18 +42,14 @@ class Connector(watch.Loggable):
         if self._sid is None:
             raise Exception()
 
-        self._host = config.get('host', None)
+        self._host = config.get('host', '127.0.0.1')
         try:
-            self._port = int(config.get('port', None))
+            self._port = int(config.get('port', 80))
         except ValueError:
             raise Exception()
 
         if self._host and self._port:
-            self._freq = utils.subsystem_freq(
-                host=self._host,
-                port=self._port,
-                point=config.get('point', None)
-            )
+            self._freq = utils.subsystem_freq(host=self._host, port=self._port)
         else:
             raise Exception()
 
